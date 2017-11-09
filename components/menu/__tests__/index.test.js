@@ -46,7 +46,7 @@ describe('Menu', () => {
     expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
-  it('should accept openKeys in mode horizontal', () => {
+  it('horizontal', () => {
     const wrapper = mount(
       <Menu openKeys={['1']} mode="horizontal" openTransitionName="">
         <SubMenu key="1" title="submenu1">
@@ -64,7 +64,7 @@ describe('Menu', () => {
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
-  it('should accept openKeys in mode inline', () => {
+  it('inline', () => {
     const wrapper = mount(
       <Menu openKeys={['1']} mode="inline" openAnimation="">
         <SubMenu key="1" title="submenu1">
@@ -82,7 +82,7 @@ describe('Menu', () => {
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
-  it('should accept openKeys in mode vertical', () => {
+  it('vertical', () => {
     const wrapper = mount(
       <Menu openKeys={['1']} mode="vertical" openTransitionName="">
         <SubMenu key="1" title="submenu1">
@@ -133,7 +133,7 @@ describe('Menu', () => {
     expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
-  it('should always follow openKeys when mode is switched', () => {
+  it('should always follow openKeys when mode is switched', async () => {
     const wrapper = mount(
       <Menu defaultOpenKeys={['1']} mode="inline">
         <Menu.Item key="menu1">
@@ -150,76 +150,90 @@ describe('Menu', () => {
         </SubMenu>
       </Menu>
     );
+    console.log(wrapper.html());
     expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-inline')).toBe(true);
     expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).toBe(false);
     wrapper.setProps({ inlineCollapsed: true });
-    setTimeout(() => {
-      // 动画结束后套样式;
-      expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-vertical')).toBe(true);
-      expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).toBe(true);
-      wrapper.setProps({ inlineCollapsed: false });
-      expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-inline')).toBe(true);
-      expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).toBe(false);
-    }, 300);
-  });
-
-  it('should open submenu when click submenu title (inline)', async () => {
-    const wrapper = mount(
-      <Menu mode="inline">
-        <SubMenu key="1" title="submenu1">
-          <Menu.Item key="submenu1">Option 1</Menu.Item>
-          <Menu.Item key="submenu2">Option 2</Menu.Item>
-        </SubMenu>
-        <Menu.Item key="2">menu2</Menu.Item>
-      </Menu>
-    );
-    expect(wrapper.find('.ant-menu-sub').length).toBe(0);
-    wrapper.find('.ant-menu-submenu-title').simulate('click');
-    expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
-    wrapper.find('.ant-menu-submenu-title').simulate('click');
+    // 动画结束后套样式;
     await delay(300);
     wrapper.update();
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
+    console.log(wrapper.html());
+    expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-vertical')).toBe(true);
+    expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).toBe(true);
+    wrapper.setProps({ inlineCollapsed: false });
+    expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-inline')).toBe(true);
+    expect(wrapper.find('.ant-menu-sub').at(0).hasClass('ant-menu-hidden')).toBe(false);
   });
 
-  it('should open submenu when hover submenu title (vertical)', async () => {
-    const wrapper = mount(
-      <Menu mode="vertical">
-        <SubMenu key="1" title="submenu1">
-          <Menu.Item key="submenu1">Option 1</Menu.Item>
-          <Menu.Item key="submenu2">Option 2</Menu.Item>
-        </SubMenu>
-        <Menu.Item key="2">menu2</Menu.Item>
-      </Menu>
-    );
-    expect(wrapper.find('.ant-menu-sub').length).toBe(0);
-    wrapper.find('.ant-menu-submenu-title').simulate('mouseenter');
-    expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
-    wrapper.find('.ant-menu-submenu').simulate('mouseleave');
-    await delay(300);
-    wrapper.update();
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
-  });
+  describe('open submenu when click submenu title', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
 
-  it('should open submenu when hover submenu title (horizontal)', async () => {
-    const wrapper = mount(
-      <Menu mode="horizontal">
-        <SubMenu key="1" title="submenu1">
-          <Menu.Item key="submenu1">Option 1</Menu.Item>
-          <Menu.Item key="submenu2">Option 2</Menu.Item>
-        </SubMenu>
-        <Menu.Item key="2">menu2</Menu.Item>
-      </Menu>
-    );
-    expect(wrapper.find('.ant-menu-sub').length).toBe(0);
-    wrapper.find('.ant-menu-submenu-title').simulate('mouseenter');
-    expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
-    wrapper.find('.ant-menu-submenu').simulate('mouseleave');
-    await delay(300);
-    wrapper.update();
-    expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const hoverMenu = (wrapper, index, event) => {
+      wrapper.find('.ant-menu-submenu-title').at(index).simulate(event);
+      jest.runAllTimers();
+      wrapper.update();
+    };
+
+    it('inline', () => {
+      const wrapper = mount(
+        <Menu mode="inline">
+          <SubMenu key="1" title="submenu1">
+            <Menu.Item key="submenu1">Option 1</Menu.Item>
+            <Menu.Item key="submenu2">Option 2</Menu.Item>
+          </SubMenu>
+          <Menu.Item key="2">menu2</Menu.Item>
+        </Menu>
+      );
+      expect(wrapper.find('.ant-menu-sub').length).toBe(0);
+      hoverMenu(wrapper, 0, 'click');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
+      hoverMenu(wrapper, 0, 'click');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
+    });
+
+
+    it('vertical', () => {
+      const wrapper = mount(
+        <Menu mode="vertical">
+          <SubMenu key="1" title="submenu1">
+            <Menu.Item key="submenu1">Option 1</Menu.Item>
+            <Menu.Item key="submenu2">Option 2</Menu.Item>
+          </SubMenu>
+          <Menu.Item key="2">menu2</Menu.Item>
+        </Menu>
+      );
+      expect(wrapper.find('.ant-menu-sub').length).toBe(0);
+      hoverMenu(wrapper, 0, 'mouseenter');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
+      hoverMenu(wrapper, 0, 'mouseleave');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
+    });
+
+    it('horizontal', () => {
+      jest.useFakeTimers();
+      const wrapper = mount(
+        <Menu mode="horizontal">
+          <SubMenu key="1" title="submenu1">
+            <Menu.Item key="submenu1">Option 1</Menu.Item>
+            <Menu.Item key="submenu2">Option 2</Menu.Item>
+          </SubMenu>
+          <Menu.Item key="2">menu2</Menu.Item>
+        </Menu>
+      );
+      expect(wrapper.find('.ant-menu-sub').length).toBe(0);
+      hoverMenu(wrapper, 0, 'mouseenter');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().length).toBe(1);
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
+      hoverMenu(wrapper, 0, 'mouseleave');
+      expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
+    });
   });
 });
